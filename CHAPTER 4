@@ -1,0 +1,148 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# make sure to use a “\” to continue to the next line
+all_apple_stock_data = pd.read_csv('C:/AI/apple/\
+all_apple_stock_data.csv') 
+
+#show the first 5 rows of the DataFrame
+all_apple_stock_data.head()
+
+# apple_open_price should equal only the column called “open”
+apple_open_prices = all_apple_stock_data[['Open']].values
+
+apple_open_prices
+#If you receive an error message run the following code #individually (without running the rest of the code) in order to #see if there are spaces in your column named “open”. If you see #spaces, delete them in the original CSV file you saved on your #computer. Use the backspace or delete button to delete the #spaces
+all_apple_stock_data.columns
+
+
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range = (0, 1))
+
+apple_prices_scaled = scaler.fit_transform(apple_open_prices)
+
+apple_prices_scaled
+num_of_prices = len(apple_prices_scaled)
+
+# Get the training and test sets from apple_prices_scaled 
+apple_price_features= []
+apple_price_labels = [] 
+for i in  range(10, (num_of_prices)):    
+    apple_price_features.append(apple_prices_scaled \
+    [i-10:i, 0])  
+    apple_price_labels.append(apple_prices_scaled [i, 0])
+
+x_train = np.array(apple_price_features[0:100])
+y_train = np.array(apple_price_labels[0:100])
+
+print(x_train.shape)
+print(y_train.shape)
+
+x_train = np.reshape(x_train, (x_train.shape[0],\
+x_train.shape[1], 1))
+print(x_train.shape)
+
+ 
+x_test = np.array(apple_price_features[101: ])
+y_test = np.array(apple_price_labels[101: ])
+
+
+x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1],\
+1))
+
+print(x_test.shape)
+
+
+from tensorflow.keras.layers import Input, Dense, Dropout, LSTM
+from tensorflow.keras.models import Model
+
+
+input_layer = Input(shape = (x_train.shape[1], 1))
+lstm1=LSTM(100,activation='relu',return_sequences=True)\
+(input_layer) 
+drop1 = Dropout(0.1)(lstm1) 
+lstm2 = LSTM(120, activation='relu', return_sequences=True)(drop1) 
+lstm3 = LSTM(80, activation='relu', return_sequences=True)(lstm2)
+lstm4 = LSTM(50, activation='relu')(lstm3) 
+output_layer = Dense(1)(lstm4)  
+model = Model(input_layer, output_layer) 
+model.compile(optimizer='adam', loss='mse')
+
+print(model.summary())
+
+print(x_train.shape)
+print(y_train.shape)
+  
+
+model_history = model.fit(x_train, y_train,  batch_size = 20, epochs=100, validation_data=(x_test, y_test),verbose=1,)
+
+
+
+y_pred =  model.predict(x_test)
+print(y_pred.shape)
+
+
+y_pred = scaler.inverse_transform(y_pred)
+
+#Prints a numpy array of 16 stockprices predicted by the model #which we will compare with actual stock prices on our graph
+print(y_pred)
+
+
+print(y_test.shape)
+
+#a 2 D array is needed. y_test is in the form of a one D array. #We need to reshape it to use it in the scaler.inverse_transform #function
+y_test = y_test.reshape(-1,1)
+
+y_test = scaler.inverse_transform(y_test)
+
+print(y_test)
+
+plt.figure(figsize=(6,5))
+plt.plot(y_test, color='red', label='Historical Apple Stock\ Price')
+plt.plot(y_pred , color='green',label='Predicted Apple Stock\ Price')
+
+
+plt.title('Apple Stock Prices') 
+plt.xlabel('Date')
+plt.ylabel('Stock Price')
+plt.legend()
+plt.show()
+
+#Predict the stock price from an array of ten new stock #prices
+new_array=np.array([142,141,140,143,144,146,148,149,149,\
+148])
+
+#need to convert it to a 2-D array in order to use #scaler.fit_transform function below
+new_array = new_array.reshape(-1, 1)
+
+print(new_array)
+
+print(new_array.shape)
+
+
+#since the model was trained on scaled data we must scale #new_array in order to enter it into the network
+new_array_scaled = scaler.fit_transform(new_array)
+
+#give the new array 3 dimensions in order to enter it into #the network
+new_array_scaled = np.reshape(new_array_scaled, (1,10,1))
+
+
+print(new_array_scaled.shape)
+
+
+print(new_array_scaled)
+
+#Get the predicted stock price in scaled format
+new_pred =  model.predict(new_array_scaled)
+
+
+#Transform the scaled predicted stock price into unscaled #regular format using the inverse_transform function
+#from the scaler object
+new_pred = scaler.inverse_transform(new_pred)
+
+
+#use the asterisk to print the first and only element  
+#in the new_pred array without brackets
+print('We predict the price of Apple stock will be:')
+print(*new_pred[0])
