@@ -1,0 +1,112 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+
+from matplotlib import pyplot
+import random
+import numpy as np
+import cv2 
+from os import listdir
+
+# load all the ten airplane images from the airplane folder
+imagesWithLabels = []
+for filename in listdir('C:/AI/images/airplanes'):
+    
+    img_data =   cv2.imread('C:/AI/images/airplanes/' +\
+    filename)
+    img_data = cv2.resize(img_data, (150, 190))
+    
+# store each loaded image in a list along with a zero, since zero
+#will be used to identify airplane images. SO each entry in the 
+# imagesWithLabels list will have two items, the image and a zero
+
+    imagesWithLabels.append((img_data,0))
+    print('> loaded %s %s' % (filename, img_data.shape))
+ 
+  
+    
+ 
+# load all the ten automobile images from the automobile folder    
+
+for filename in listdir('C:/AI/images/automobiles'):
+    # load image
+    img_data =  cv2.imread('C:/AI/images/automobiles/' +\
+     filename)
+    img_data = cv2.resize(img_data, (150, 190))
+    
+    # store loaded image in the list
+    imagesWithLabels.append((img_data,1))
+    print('> loaded %s %s' % (filename, img_data.shape))
+
+
+#Check to see that our list contains all 20 images—10 airplanes and 10
+#automobiles
+len(imagesWithLabels)
+
+# shuffle the list since we don’t want to train the network with # all airplanes in the beginning and all autos at the end of our # list
+random.shuffle(imagesWithLabels)
+
+#divide the list into training and test sets
+train = imagesWithLabels[:10]
+test = imagesWithLabels[10:]
+
+
+
+# Break the pairs in the train list into a list containing the #images and a list containing the ones and zeros that correspond # to those images. Remember, “0” means airplane and “1” means #automobile. Then do the same for the list called “test”
+
+x_train, y_train = zip(*train)
+x_test, y_test = zip(*test)
+
+
+#Convert x_train, y_train, and x_test, y_test to  numpy arrays #since the neural network takes numpy arrays as input
+x_train = np.array(x_train)
+y_train = np.array(y_train)
+
+x_test = np.array(x_test)
+y_test = np.array(y_test)
+
+#look at how our shapes are
+print(x_train.shape)
+print(y_train.shape )
+
+
+#Build the model
+CNN_model = models.Sequential()
+CNN_model.add(layers.Conv2D(50, (2, 2), activation='relu',\
+input_shape=(190,150,3)))
+CNN_model.add(layers.MaxPooling2D((3, 3)))
+CNN_model.add(layers.Flatten())
+CNN_model.add(layers.Dense(50, activation='relu'))
+CNN_model.add(layers.Dropout(.1))
+
+# The last layer has two neurons since one is for 0 or airplane #and the other is for 1 or automobile. The network will output #two values later on when we use the “predict” function. These #values function as probabilities. So the neuron with the highest
+#probability value will be our prediction, either 1 or 0
+
+CNN_model.add(layers.Dense(2, activation='softmax'))
+
+optimizer = tf.optimizers.Adam(learning_rate = .005)
+CNN_model.compile(optimizer= optimizer,
+                  
+          loss=tf.keras.losses.SparseCategoricalCrossentropy
+         (from_logits=False),metrics=['accuracy'])
+
+
+#train the model and evaluate the model using the test set
+history = CNN_model.fit(x_test, y_test, epochs=5,validation_data=( x_test, y_test))
+
+#Predict the classification of one image, the 8th image since we #begin at index 0. SO from 0 to 7, makes image 7 the 8th image
+output = CNN_model.predict(x_train)
+prediction = np.argmax(output[7])
+
+
+print(prediction)
+
+if prediction == 0:
+    print ('The image is a picture of an airplane.')
+
+elif prediction == 1:
+    print('The image is a picture of an automobile.')
+
+
+#Show the image to see if you classified it correctly
+pyplot.imshow(x_train[7])
+pyplot.show()
