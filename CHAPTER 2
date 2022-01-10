@@ -1,0 +1,116 @@
+# import the necessary libararies
+
+import pandas as pd
+from tensorflow.keras.layers import Dense, Dropout, Activation
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.optimizers import Adam
+
+# Notice that at the end of each line below there is a 
+# backslash. This means that the code is continued on the 
+# next line. 
+
+crime_data = pd.read_csv("https://raw.githubusercontent\
+.com/stevedas/aiBook/main/crimeSTATS.csv",\
+sep=',')
+
+
+
+# take out the “total_crime_reported_per_1_million_res”   
+# column from the housing_data dataset and use it as the Y 
+# variable 
+X = crime_data.drop(['total_crime_reported_per_1_million\
+_res'],axis=1).values
+Y = crime_data[['total_crime_reported_per_1_million_res']\
+].values 
+
+#divide the variables into training and test sets using
+# the train_test_split function
+from sklearn.model_selection import train_test_split
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y,\
+test_size=0.20, random_state=25)
+
+
+
+
+#notice the lines after the first are indented inward. This
+# is because all the lines indented define the model.
+# The following lines create the model of the neural 
+# network before it is trained
+
+def create_model (learning_rate, dropout_rate):
+
+    model = Sequential()
+    model.add(Dense(100, input_dim=X_train.shape[1],\
+    activation='relu'))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(50,  activation='relu'))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(25,  activation='relu'))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(1))
+
+    adam = Adam(lr=learning_rate)
+    model.compile(loss='mean_squared_error',\
+    optimizer=adam, metrics=['mae'])
+    return model
+
+
+
+
+# initialize some variables
+dropout_rate = 0.1
+
+epochs = 100
+learn_rate = 0.01
+
+
+#create the model using the initialized variables
+model = create_model(learn_rate, dropout_rate)
+
+
+#Notice the backslashes at the end of the lines. This 
+#means the code of a line is continued on the next line.
+#This next line is used to train our neural network model
+model_history = model.fit(X_train, Y_train,\
+batch_size= 1, epochs=epochs, validation_split=0.2,\
+verbose=1)
+
+#evaluate the model’s accuracy
+score = model.evaluate(X_test, Y_test, verbose=1)
+
+print("Loss:", score[0])
+print("Mean Absolute Error:", score[1])
+
+
+
+
+#graph the mean absolute error for the training and test #sets 
+import matplotlib.pyplot as plt
+
+plt.plot(model_history.history['mae'])
+plt.plot(model_history.history['val_mae'])
+plt.legend(['train','test'], loc='upper right')
+plt.title('Model Error')
+plt.ylabel('Mean Absolute Error')
+plt.xlabel('Epoch')
+
+
+
+
+#create fictitious variables for each of the independent #variables in order to make a prediction about 
+# total_crime_reported_per_1_million_res
+
+X_new = [[30,74,11,31,20]]
+
+# Use the prediction function to predict  
+# total_crime_reported_per_1_million_res 
+# from the variables entered in the X_new list 
+
+prediction = model.predict(X_new)
+
+# print the prediction
+print("The total crime reported per 1 million residents would be:",\
+prediction)
+
+
+# The following code displays the structure of the model
