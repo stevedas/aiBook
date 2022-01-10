@@ -1,0 +1,115 @@
+import numpy as np # python package for arrays and operations
+import pandas as pd # python package for data processing
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+from keras.models import Sequential
+from keras.layers import Dense, Embedding, LSTM, SpatialDropout1D
+from sklearn.model_selection import train_test_split
+import re
+
+# Read the CSV file into the program from the proper location
+# (directory)in your computer
+
+data = pd.read_csv('C:/AI/book reviews.csv',encoding = "ISO-8859-1")
+# Keeping only the neccessary columns. Take the name and date #columns away since we are only trying to predict a type of #sentiment with a bunch of text (We are not using dates or names #to predict the type of sentiment. Note double brackets on each #side because “sentiment” and “text” are columns. If they were #rows we would use a single bracket.
+data = data[['sentiment', 'text']]
+#show the DataFrame called “data” before cleaning it
+print(data)
+
+#Get rid of the rows that show the sentiment as “Neutral” #reviews. Note  single bracket on each side is used because #“Neutral” is a row. If  they were rows we would use a single #bracket. If it were a column then  we would use double brackets #on each side as we did in the previous  line above
+data = data[data.sentiment != "Neutral"]
+
+#The following couple of lines are known as “cleaning the data”
+
+#remove special characters
+data['text'] = data['text'].apply((lambda x: re.sub\
+('[^a-zA-Z0-9\s]','',x)))
+
+#Change all letters of the words in each review to lower case
+data['text'] = data['text'].apply(lambda x: x.lower())
+
+#show the DataFrame called “data” after cleaning it
+print(data)
+    
+max_words = 10000
+tokenizer = Tokenizer(num_words=max_words, split=' ')
+# create a vocabulary for the words in the texts assigning each #word a number. In Essence this creates a word index “dictionary”
+tokenizer.fit_on_texts(data['text'].values)
+
+#the following two lines show each word in the texts and the #number that tokenizer assigns it
+words = tokenizer.word_index
+print(words)
+
+# take each word in each text entry and replace it with its #corresponding integer value from the word_index dictionary. In
+#other words represent each review as a series of numbers
+X = tokenizer.texts_to_sequences(data['text'].values)
+#Pads putting zeros from the beginning by default unless you #specify
+X = pad_sequences(X)
+
+model = Sequential()
+model.add(Embedding(max_words, 20,input_length = X.shape[1]))
+model.add(SpatialDropout1D(0.2))
+model.add(LSTM(200, dropout=0.1))
+model.add(Dense(2,activation='softmax'))
+model.compile(loss = 'categorical_crossentropy', optimizer='adam',metrics = ['accuracy'])
+print(model.summary())
+
+# create a two column dummy variable using the data in the
+# sentiment column of the DataFrame named “data”
+pd.get_dummies(data, columns=['sentiment'])
+
+#Assign the two column dummy variables to a numpy array #named Y
+Y = pd.get_dummies(data['sentiment']).values
+
+#show what the dummy variables look like representing each #sentiment #(i.e. 1,0 means negative and 0,1 means positive)
+#show that Y has two columns
+print(Y)
+
+X_train, X_test, Y_train, Y_test = train_test_split(X,Y,\
+test_size = 0.25, random_state = 54)
+
+
+
+#Show how many rows and how many columns are in the numpy arrays #X_train, Y_train, X_test and Y_test. Obtaining the “shape” means
+#obtaining the number of rows and number of columns of each array
+print(X_train.shape,Y_train.shape)
+print(X_test.shape,Y_test.shape)
+
+
+model.fit(X_train, Y_train, epochs = 10, batch_size=5, verbose\
+ = 2, validation_split=0.2)
+score = model.evaluate(X_test, Y_test, verbose =1)
+print("Loss:", score[0])
+print("Accuracy:", score[1])
+
+
+
+
+#Test the neural networks ability to predict a sentiment by #creating #and entering a review using the lines below
+
+review = [' It bored me.']
+#vectorizing the review by the pre-fitted tokenizer instance
+review = tokenizer.texts_to_sequences(review)
+#padding the list to have exactly the same shape as embedded #layer input
+review = pad_sequences(review, maxlen=10, dtype='int32', value=0)
+sentiment = model.predict(review,batch_size=1,verbose = 2)[0]
+if(np.argmax(sentiment) == 0):
+    print("This is a negative review.")
+elif (np.argmax(sentiment) == 1):
+    print("This is a positive review.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
