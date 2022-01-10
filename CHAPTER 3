@@ -1,0 +1,79 @@
+from keras.models import Sequential
+from keras.layers import Dense
+import numpy
+import pandas as pd 
+
+
+# Create dataframe
+dataframe = pd.DataFrame()
+
+#Add Columns
+dataframe['Age']=[20,25,50,30,65,18,40,45,50,18]
+dataframe['# of Cigars']=[2,0,20,40,15,0,1,30,10,0]
+dataframe['Weight']=[120,200,270,180,175,150,200,230,189,\
+175]
+dataframe['Sugar Eaten']=[2,5,8,1,9,3,8,7,9,3]
+dataframe['Cancer']=[0,0,1,1,1,0,1,1,1,0]
+
+#split the data into (X) and (Y) variables, splitting the #data
+
+X = dataframe[['Age','# of Cigars','Weight','Sugar Eaten']] 
+Y = dataframe[['Cancer']]
+
+#create model, add dense layers one by one specifying activation 
+#function
+model = Sequential()
+
+#input layers 
+model.add(Dense(5, input_dim=4, activation='relu'))
+#input of values for X  
+
+
+model.add(Dense(5, activation='relu'))
+model.add(Dense(4, activation='relu'))
+model.add(Dense(1, activation='sigmoid')) 
+#sigmoid for relu for final  #layer since final value is either 1 or 0
+
+#compile the model, using adam gradient descent  
+model.compile(loss="binary_crossentropy",  \
+optimizer="adam", metrics=['accuracy'])
+
+# Divide the data into training and test sets
+from sklearn.model_selection import train_test_split
+X_train,X_test, Y_train, Y_test = train_test_split(X,Y,\
+test_size=.20, random_state = 31)
+
+#call the function to fit the data (training the network)
+model.fit(X_train,Y_train, epochs = 1000, batch_size=2)
+
+#evaluate the model
+scores = model.evaluate(X_test,Y_test)
+print('Percentage Accuracy:') 
+print(scores[1]*100)
+
+
+# save the model  
+model.save('C:/AI/cancer_prediction')
+
+# Use a two dimensional list to enter new data to make a 
+# prediction. It is two dimensional since there are double # brackets on each side. That is to say there is one row 
+# with four columns(each number below represents a 
+# different column 
+New_Data = [[54,20,200,40]]
+
+
+# Use the prediction function to predict cancer from the
+# variables entered in the New_Data list
+prediction = model.predict(New_Data)
+
+# print the prediction
+print(prediction)
+
+#To load the model at a later date sometime in the future
+#use this code
+
+from tensorflow import keras
+from keras.models import Sequential
+model = keras.models.load_model('C:/AI/cancer_prediction')
+
+
