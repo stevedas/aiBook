@@ -1,0 +1,75 @@
+import random
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+data = {}
+data['S1'] = [random.randint(0,1) for x in range(100)]
+data['S2'] = [random.randint(0,1) for x in range(100)]
+data['S3'] = [random.randint(0,1) for x in range(100)]
+data['S4'] = [random.randint(0,1) for x in range(100)]
+data['S5'] = [random.randint(0,1) for x in range(100)]
+data['S6'] = [random.randint(0,1) for x in range(100)]
+data['S7'] = [random.randint(0,1) for x in range(100)]
+data['S8'] = [random.randint(0,1) for x in range(100)]
+data['S9'] = [random.randint(0,1) for x in range(100)]
+data['S10'] = [random.randint(0,1) for x in range(100)]
+
+data = pd.DataFrame(data)
+observations = 100
+machines = 10
+machine_selected = []
+rewards = [0] * machines
+penalties = [0] * machines
+
+total_rewards = 0
+
+for n in range(0, observations):
+    slotmachine = 0
+    beta_max = 0
+
+    for i in range(0, machines):
+        beta_dis = random.betavariate(rewards[i] + 1, \
+             penalties[i] + 1)
+        if beta_dis > beta_max:
+            beta_max = beta_dis
+            slotmachine = i
+    machine_selected.append(slotmachine)
+
+    reward = data.values[n, slotmachine]
+    if reward == 1:
+        rewards[slotmachine] = rewards[slotmachine] + 1
+    else:
+        penalties[slotmachine] = penalties[slotmachine] + 1
+    total_rewards = total_rewards + reward
+print("\n\nRewards By Machine = ", rewards)
+print("\nTotal Rewards = ", total_rewards)
+
+print("\nMachine Selected At Each Round By Thompson \
+       Sampling : \n", machine_selected)
+
+
+
+
+#Graphing the number of rewards of each machine
+ 
+plt.bar(['S1','S2','S3','S4','S5','S6','S7','S8','S9',\
+'S10'], rewards)
+plt.title(' Number of Rewards of Each Machine ')
+plt.xlabel('Slotmachines')
+plt.ylabel('Rewards By Each Machine')
+plt.show()
+
+#Number Of Times Each Machine Was Selected
+from collections import Counter
+print("\n\nNumber Of Times Each Machine Was Selected By   \
+The Thompson Sampling Algorithm : \n",  \
+dict(Counter(machine_selected))) 
+  
+#Visualizing the Number Of Times Each Machine Was Selected
+plt.hist(machine_selected)
+plt.title('Histogram of machines selected')
+plt.xlabel('Slotmachines')
+plt.xticks(range(0, 10))
+plt.ylabel('No. Of Times Each Slot Machine Was Selected')
+plt.show()
