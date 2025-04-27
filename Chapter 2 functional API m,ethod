@@ -1,0 +1,17 @@
+inputs = tf.keras.Input((1,))
+
+layer_1 = tf.keras.layers.Dense(100, activation='relu')(inputs)
+
+layer_2 = tf.keras.layers.Dropout(dropout_rate)(layer_1)
+
+layer_3 = tf.keras.layers.Dense(50,activation='relu')(layer_2)
+
+layer_4 = tf.keras.layers.Dropout(dropout_rate)(layer_3)
+
+layer_5 = tf.keras.layers.Dense(25,activation='relu')(layer_4)
+
+layer_6 = tf.keras.layers.Dropout(dropout_rate)(layer_5)
+
+outputs = tf.keras.layers.Dense(1)(layer_6)
+
+model = tf.keras.Model(inputs=inputs,outputs= outputs)
