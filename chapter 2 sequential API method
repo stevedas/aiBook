@@ -1,0 +1,25 @@
+#sequential API method the code would look like this:
+
+model = tensorflow.keras.models.Sequential()
+model.add(Dense(100, input_dim=X_train.shape[1],\     
+activation='relu'))
+model.add(Dropout(dropout_rate))
+model.add(Dense(50,  activation='relu'))
+model.add(Dropout(dropout_rate))
+model.add(Dense(25,  activation='relu'))
+model.add(Dropout(dropout_rate))
+model.add(Dense(1))
+
+  # Another way to use the sequential API method
+  model = tensorflow.keras.models.Sequential([ 
+   Dense(100, input_shape=(1,), activation='relu' ),
+   Dropout(dropout_rate),
+   Dense(50,  activation='relu'),
+   Dropout(dropout_rate),
+   Dense(25,  activation='relu'), 
+   Dropout(dropout_rate),
+   Dense(1)
+])
+
+
+  
